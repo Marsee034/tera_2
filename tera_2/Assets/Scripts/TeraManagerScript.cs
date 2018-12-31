@@ -23,7 +23,7 @@ public class TeraManagerScript : MonoBehaviour {
 	// ゲーム中に存在するシーンの文字列
 	public static Dictionary<SceneNameType, string> SceneNameDic = new Dictionary<SceneNameType, string>{
 		{ TeraManagerScript.SceneNameType.Title, "TitleScene" },
-		{ TeraManagerScript.SceneNameType.DataSelect, "TitleScene" },
+		{ TeraManagerScript.SceneNameType.DataSelect, "DataSelect" },
 		{ TeraManagerScript.SceneNameType.Lobby, "TitleScene" },
 		{ TeraManagerScript.SceneNameType.StageSelect, "TitleScene" },
 		{ TeraManagerScript.SceneNameType.ModOfTetlapod, "TitleScene" },
@@ -75,6 +75,8 @@ public class TeraManagerScript : MonoBehaviour {
 		// loading 画面の初期化
 		loading_prefab = GameObject.Find("DontDestroyCanvas/Load");
 		loading_prefab.SetActive( false );
+
+		StartCoroutine( this.TestSceneChange() );
 	}
 	
 	// Update is called once per frame
@@ -82,12 +84,45 @@ public class TeraManagerScript : MonoBehaviour {
 		
 	}
 
-	public void SceneChange( TeraManagerScript.SceneNameType type ){
+	private IEnumerator TestSceneChange(  ){
+		this.SceneChangeStart( TeraManagerScript.SceneNameType.DataSelect );
+
+		yield return new WaitForSeconds( 10.0f );
+
+		this.SceneChangeEnd( TeraManagerScript.SceneNameType.DataSelect );
+	}
+
+	/// <summary>
+	/// 	新しいシーンを表示する
+	/// 	遷移する前に呼び出す
+	/// </summary>
+	/// <param name="type"> 新しいシーンを示す定数 </param>
+	public void SceneChangeStart( TeraManagerScript.SceneNameType type ){
 		// 現在のシーンを記憶させる
 		this.previous = SceneManager.GetActiveScene();
 
 		// ロード画面を呼びだす
 		this.CallLoading( true );
+
+		// 呼び出したいシーンを呼び出す
+		SceneManager.LoadSceneAsync( TeraManagerScript.SceneNameDic[ type ], LoadSceneMode.Additive );
+	}
+
+	/// <summary>
+	///		新しいシーンを表示する
+	/// 	新しいシーンの初期化が終了次第呼び出す
+	/// </summary>
+	/// <param name="type"> 新しいシーンを示す定数 </param>
+	public void SceneChangeEnd( TeraManagerScript.SceneNameType type ){
+		// 表示しているシーンを新しいシーンに変更する
+		Scene next_scene = SceneManager.GetSceneByName( TeraManagerScript.SceneNameDic[ type ] );
+		SceneManager.SetActiveScene( next_scene );
+
+		// 古いシーンをヒエラルキー上から削除
+		SceneManager.UnloadSceneAsync( previous );
+
+		// ロード画面の終了
+		this.CallLoading( false );
 	}
 
 	/// <summary>
